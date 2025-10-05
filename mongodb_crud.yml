@@ -1,0 +1,58 @@
+---
+- hosts: localhost
+  collections:
+    - community.mongodb
+  tasks:
+    - name: Check MongoDB Status
+      community.mongodb.mongodb_info:
+        login_user: myuser
+        login_password: mypass
+        login_host: host.docker.internal
+        login_port: 27017
+      register: mongo_info
+
+    - debug:
+        msg: "MongoDB is running. Version: {{ mongo_info.general.version }}"
+
+    - name: Create a database and insert a document
+      community.mongodb.mongodb_shell:
+        login_user: myuser
+        login_password: mypass
+        login_host: host.docker.internal
+        login_port: 27017
+        db: mydb
+        eval: |
+          db.mycollection.insertOne({name: "example", value: 123})
+
+    - name: Query documents
+      community.mongodb.mongodb_shell:
+        login_user: myuser
+        login_password: mypass
+        login_host: host.docker.internal
+        login_port: 27017
+        db: mydb
+        eval: db.mycollection.find({}).toArray()
+      register: result
+
+    - debug:
+        var: result
+
+    - name: Update a document
+      community.mongodb.mongodb_shell:
+        login_user: myuser
+        login_password: mypass
+        login_host: host.docker.internal
+        login_port: 27017
+        db: mydb
+        eval: |
+          db.mycollection.updateOne({name: "example"}, {$set: {value: 456}})
+
+    - name: Delete a document
+      community.mongodb.mongodb_shell:
+        login_user: myuser
+        login_password: mypass
+        login_host: host.docker.internal
+        login_port: 27017
+        db: mydb
+        eval: |
+          db.mycollection.deleteOne({name: "example"})
